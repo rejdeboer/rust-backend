@@ -134,7 +134,7 @@ jobs:
         uses: ./.github/actions/deploy-terraform
         with:
           BACKEND_STATE_KEY: "terraform.tfstate"
-          STORAGE_ACCOUNT_NAME: "rejdeboer"
+          BACKEND_BUCKET_NAME: "rejdeboertfstate"
           WORKING_DIRECTORY: ./deployment
 
       - name: Build container image
