@@ -1,11 +1,16 @@
-name: Checks
+name: Push
 
 on: [ push, pull_request ]
 
 env:
   CARGO_TERM_COLOR: always
-  SQLX_VERSION: 0.6.2
+  SQLX_VERSION: 0.6.3
   SQLX_FEATURES: "rustls,postgres"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_AD_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_AD_TENANT_ID }}
+  ARM_ACCESS_KEY: ${ secrets.AZURE_TERRAFORM_ACCESS_KEY }
 
 jobs:
   test:
@@ -116,3 +121,24 @@ jobs:
         run: SKIP_DOCKER=true ./scripts/init_db.sh
       - name: Generate code coverage
         run: cargo tarpaulin --verbose --workspace
+
+  deploy:
+    name: Build, push, and deploy
+    needs: [ "test", "fmt", "clippy", "coverage" ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+
+      - name: Deploy Terraform
+        uses: ./.github/actions/deploy-terraform
+        with:
+          BACKEND_STATE_KEY: "terraform.tfstate"
+          STORAGE_ACCOUNT_NAME: "rejdeboer"
+          WORKING_DIRECTORY: ./deployment
+
+      - name: Build container image
+        run: docker build -t emailapi.azurecr.io/repo:email-api .
+
+      - name: Push image to Docker Hub
+        run: docker push emailapi.azurecr.io/repo:email-api

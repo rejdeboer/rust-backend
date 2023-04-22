@@ -28,7 +28,7 @@ runs:
 
     - name: Terraform Init
       working-directory: ${{ inputs.WORKING_DIRECTORY }}
-      run: terraform init -backend-config="bucket=${{ inputs.BACKEND_BUCKET_NAME }}" -backend-config="key=${{ inputs.BACKEND_STATE_KEY }}"
+      run: terraform init -backend-config="storage_account_name=${{ inputs.STORAGE_ACCOUNT_NAME }}" -backend-config="key=${{ inputs.BACKEND_STATE_KEY }}"
       shell: bash
 
     - name: Terraform Apply
