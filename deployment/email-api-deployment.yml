@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    app: email-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-api
+  template:
+    metadata:
+      labels:
+        app: email-api
+    spec:
+      containers:
+        - name: email-api
+          image: emailapi.azurecr.io/repo:email-api 
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "300m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_DATABASE__NAME
+              value: "$DB_NAME"
+            - name: APP_DATABASE__USERNAME
+              value: "$DB_USERNAME"
+            - name: APP_DATABASE__PASSWORD
+              value: "$DB_PASSWORD"
+            - name: APP_DATABASE__HOSTNAME
+              value: "$DB_HOST"
+            - name: APP_DATABASE__PORT
+              value: "$DB_PORT"
