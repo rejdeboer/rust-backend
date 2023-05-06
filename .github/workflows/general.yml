@@ -122,40 +122,51 @@ jobs:
       - name: Generate code coverage
         run: cargo tarpaulin --verbose --workspace
 
-  deploy:
-    name: Build, push, and deploy #needs: [ "test", "fmt", "clippy", "coverage" ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master
-        uses: actions/checkout@master
-
-      - name: Deploy Terraform
-        uses: ./.github/actions/deploy-terraform
-        with:
-          BACKEND_STATE_KEY: "terraform.tfstate"
-          BACKEND_BUCKET_NAME: "rejdeboertfstate"
-          WORKING_DIRECTORY: ./deployment
-
-      - name: Build container image
-        run: docker build -t emailapi.azurecr.io/repo:email-api .
-
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_AD_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_AD_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Push image to ACR
-        run: docker push emailapi.azurecr.io/repo:email-api
-
-      - name: Set AKS context
-        id: set-context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: '${{ secrets.RESOURCE_GROUP }}'
-          cluster-name: '${{ secrets.CLUSTER_NAME }}'
-
-      - name: Setup kubectl
-        id: install-kubectl
-        uses: azure/setup-kubectl@v3
+  # deploy:
+  #   name: Build, push, and deploy 
+  #   needs: [ "test", "fmt", "clippy", "coverage" ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout master
+  #       uses: actions/checkout@master
+  #
+  #     - name: Deploy Terraform
+  #       uses: ./.github/actions/deploy-terraform
+  #       with:
+  #         BACKEND_STATE_KEY: "terraform.tfstate"
+  #         BACKEND_BUCKET_NAME: "rejdeboertfstate"
+  #         WORKING_DIRECTORY: ./deployment
+  #
+  #     - name: Build container image
+  #       run: docker build -t emailapi.azurecr.io/repo:email-api .
+  #
+  #     - name: Azure login
+  #       run: az login
+  #
+  #     - name: Push image to ACR
+  #       run: docker push emailapi.azurecr.io/repo:email-api
+  #
+  #     # TODO: Find better Kubernetes deployment strategy
+  #     - name: Replace Environment Variables
+  #       uses: danielr1996/envsubst-action@1.0.0
+  #       env:
+  #         PORT: ${{ secrets.PORT }}
+  #         DB_HOST: ${{ secrets.DB_HOST }}
+  #         DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  #         DB_PORT: ${{ secrets.DB_PORT }}
+  #         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  #         DB_NAME: ${{ secrets.DB_NAME }}
+  #       with:
+  #         input: deployment.yml
+  #         output: deploy.yml
+  #
+  #     - name: Set AKS context
+  #       id: set-context
+  #       uses: azure/aks-set-context@v3
+  #       with:
+  #         resource-group: '${{ secrets.RESOURCE_GROUP }}'
+  #         cluster-name: '${{ secrets.CLUSTER_NAME }}'
+  #
+  #     - name: Setup kubectl
+  #       id: install-kubectl
+  #       uses: azure/setup-kubectl@v3
